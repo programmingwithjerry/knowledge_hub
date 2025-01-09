@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Log-in{% endblock %}
+
+{% block content %}
+<!-- Main content block for the login page. -->
+<h1>Log-in</h1>
+<div class="module">
+    {% if form.errors %}
+        <!-- Display an error message if there are form errors (e.g., incorrect username or password). -->
+        <p>Your username and password didn't match. Please try again.</p>
+    {% else %}
+        <!-- Display a message prompting the user to log in if there are no errors. -->
+        <p>Please, use the following form to log-in:</p>
+    {% endif %}
+    <div class="login-form">
+        <!-- Login form where users enter their credentials. -->
+        <form action="{% url 'login' %}" method="post">
+            <!-- Render form fields as paragraphs. -->
+            {{ form.as_p }}
+            <!-- CSRF token for security to prevent cross-site request forgery. -->
+            {% csrf_token %}
+            <!-- Hidden field to store the "next" URL, so the user is redirected after login. -->
+            <input type="hidden" name="next" value="{{ next }}" />
+            <!-- Submit button to submit the login form. -->
+            <p><input type="submit" value="Log-in"></p>
+        </form>
+    </div>
+</div>
+{% endblock %}

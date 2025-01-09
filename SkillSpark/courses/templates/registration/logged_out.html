@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Logged out{% endblock %}
+
+{% block content %}
+<!-- Main content block for the logged-out page. -->
+<h1>Logged out</h1>
+<div class="module">
+    <p>
+        <!-- Message confirming successful logout. -->
+        You have been successfully logged out.
+        <!-- Link to the login page for the user to log in again. -->
+        You can <a href="{% url "login" %}">log-in again</a>.
+    </p>
+</div>
+{% endblock %}
