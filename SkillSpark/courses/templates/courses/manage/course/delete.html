@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Delete course{% endblock %}
+<!-- Sets the title of the page to "Delete course" -->
+
+{% block content %}
+<h1>Delete course "{{ object.title }}"</h1>
+<!-- Displays the course title being deleted -->
+
+<div class="module">
+  <!-- Wraps the delete confirmation form in a styled module -->
+
+  <form action="" method="post">
+    <!-- Specifies the form's action (current URL) and HTTP method (POST) -->
+    {% csrf_token %}
+    <!-- Adds a CSRF token for security against cross-site request forgery attacks -->
+
+    <p>Are you sure you want to delete "{{ object }}"?</p>
+    <!-- Asks the user for confirmation to delete the course -->
+
+    <input type="submit" value="Confirm">
+    <!-- Submit button to confirm the deletion -->
+  </form>
+</div>
+
+{% endblock %}

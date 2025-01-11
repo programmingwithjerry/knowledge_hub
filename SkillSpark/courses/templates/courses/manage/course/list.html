@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+<!-- Inherit the base template to maintain consistent layout across pages -->
+
+{% block title %}My courses{% endblock %}
+<!-- Define the title of the page -->
+
+{% block content %}
+<!-- Define the content block specific to this template -->
+<h1>My courses</h1>
+<!-- Page heading -->
+
+<div class="module">
+  <!-- Container for the courses -->
+
+  {% for course in object_list %}
+  <!-- Loop through each course in the object_list provided by the view -->
+  <div class="course-info">
+    <!-- Container for individual course information -->
+
+    <h3>{{ course.title }}</h3>
+    <!-- Display the title of the course -->
+
+    <p>
+      <!-- Links to edit or delete the course -->
+      <a href="{% url "course_edit" course.id %}">Edit</a>
+      <!-- Link to the edit page for the course -->
+
+      <a href="{% url "course_delete" course.id %}">Delete</a>
+      <!-- Link to the delete confirmation page for the course -->
+    </p>
+  </div>
+  {% empty %}
+  <!-- If there are no courses in the object_list, display this message -->
+  <p>You haven't created any courses yet.</p>
+  {% endfor %}
+
+  <p>
+    <!-- Link to create a new course -->
+    <a href="{% url "course_create" %}" class="button">Create new course</a>
+  </p>
+</div>
+{% endblock %}

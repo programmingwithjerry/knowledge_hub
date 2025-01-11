@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+<!-- Inherit the base template to maintain consistent layout across pages -->
+
+{% block title %}
+<!-- Define the title of the page -->
+{% if object %}
+  <!-- If an existing course object is being edited, display its title in the page title -->
+  Edit course "{{ object.title }}"
+{% else %}
+  <!-- If creating a new course, display this title -->
+  Create a new course
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- Define the content block specific to this template -->
+<h1>
+  <!-- Display the appropriate heading based on whether editing or creating -->
+  {% if object %}
+    Edit course "{{ object.title }}"
+  {% else %}
+    Create a new course
+  {% endif %}
+</h1>
+
+<div class="module">
+  <!-- Container for the course form -->
+  <h2>Course info</h2>
+  <!-- Subheading for the form -->
+
+  <form method="post">
+    <!-- Form to create or edit a course -->
+    {{ form.as_p }}
+    <!-- Render the Django form fields as paragraphs -->
+
+    {% csrf_token %}
+    <!-- Add the CSRF token to protect against Cross-Site Request Forgery -->
+
+    <p><input type="submit" value="Save course"></p>
+    <!-- Submit button to save the course -->
+  </form>
+</div>
+{% endblock %}
