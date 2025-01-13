@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+<!-- Extends the base template to maintain a consistent layout across pages. -->
+
+{% block title %}
+    <!-- Dynamically sets the page title based on whether the object is being edited or created. -->
+    {% if object %}
+        Edit content "{{ object.title }}"
+    {% else %}
+        Add new content
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <!-- Main content block displaying the form for content creation or editing. -->
+    <h1>
+        <!-- Heading for the content page, which shows whether the content is being edited or created. -->
+        {% if object %}
+            Edit content "{{ object.title }}"
+        {% else %}
+            Add new content
+        {% endif %}
+    </h1>
+
+    <div class="module">
+        <!-- Section for displaying course information and the form for creating/editing content. -->
+        <h2>Course info</h2>
+
+        <form action="" method="post" enctype="multipart/form-data">
+            <!-- Form for submitting the content (with POST method and file upload support). -->
+            {{ form.as_p }}
+            <!-- Render the form fields as paragraphs. -->
+
+            {% csrf_token %}
+            <!-- CSRF token for security to prevent cross-site request forgery. -->
+
+            <p><input type="submit" value="Save content"></p>
+            <!-- Submit button for saving the content. -->
+        </form>
+    </div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+<!-- Extends the base template to maintain a consistent layout across pages. -->
+
+{% block title %}
+Edit "{{ course.title }}"
+<!-- Sets the page title dynamically using the course title. -->
+{% endblock %}
+
+{% block content %}
+<!-- Main content block of the template. Displays the form for editing course modules. -->
+<h1>Edit "{{ course.title }}"</h1>
+<!-- Heading showing the course title being edited. -->
+
+<div class="module">
+    <h2>Course modules</h2>
+    <!-- Section for managing course modules. -->
+
+    <form method="post">
+        <!-- Form for editing course modules. POST method is used to send form data. -->
+        {{ formset }}
+        <!-- Displays the formset for course module editing. -->
+
+        {{ formset.management_form }}
+        <!-- Management form for Django formsets, required for proper processing of formset data. -->
+
+        {% csrf_token %}
+        <!-- CSRF token for security to prevent cross-site request forgery. -->
+
+        <input type="submit" value="Save modules">
+        <!-- Submit button to save the changes made to the modules. -->
+    </form>
+</div>
+{% endblock %}
