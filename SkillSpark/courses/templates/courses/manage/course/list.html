@@ -23,10 +23,10 @@
     <p>
       <!-- Links to edit or delete the course -->
       <a href="{% url "course_edit" course.id %}">Edit</a>
-      <!-- Link to the edit page for the course -->
-
-      <a href="{% url "course_delete" course.id %}">Delete</a>
       <!-- Link to the delete confirmation page for the course -->
+      <a href="{% url "course_delete" course.id %}">Delete</a>
+      <!-- Link to the page for updating the modules of the specified course. -->
+      <a href="{% url "course_module_update" course.id %}">Edit modules</a>
     </p>
   </div>
   {% empty %}
