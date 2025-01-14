@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% load course %}
+
+{% block title %}
+  <!-- Setting the page title to display the module's order and title -->
+  Module {{ module.order|add:1 }}: {{ module.title }}
+{% endblock %}
+
+{% block content %}
+{% with course=module.course %}
+  <!-- Display the course title -->
+  <h1>Course "{{ course.title }}"</h1>
+  <!-- List all modules within the current course -->
+  <div class="contents">
+    <h3>Modules</h3>
+    <ul id="modules">
+      {% for m in course.modules.all %}
+        <li data-id="{{ m.id }}" {% if m == module %}class="selected"{% endif %}>
+          <!-- Link to the module's content list -->
+          <a href="{% url "module_content_list" m.id %}">
+            <span>
+              Module <span class="order">{{ m.order|add:1 }}</span>
+            </span>
+            <br>
+            {{ m.title }}
+          </a>
+        </li>
+      {% empty %}
+        <li>No modules yet.</li>
+      {% endfor %}
+    </ul>
+    <!-- Link to edit modules in the course -->
+    <p><a href="{% url "course_module_update" course.id %}">
+    Edit modules</a></p>
+  </div>
+
+  <!-- Display details about the current module -->
+  <div class="module">
+    <h2>Module {{ module.order|add:1 }}: {{ module.title }}</h2>
+    <h3>Module contents:</h3>
+
+    <!-- List the contents of the current module -->
+    <div id="module-contents">
+      {% for content in module.contents.all %}
+        <div data-id="{{ content.id }}">
+          {% with item=content.item %}
+            <!-- Display the content item and its model type -->
+            <p>{{ item }} ({{ item|model_name }})</p>
+            <!-- Link to edit the content item -->
+            <a href="{% url "module_content_update" module.id item|model_name item.id %}">
+              Edit
+            </a>
+
+            <!-- Form to delete the content item -->
+            <form action="{% url "module_content_delete" content.id %}" method="post">
+              <input type="submit" value="Delete">
+              {% csrf_token %}
+            </form>
+            {% endwith %}
+        </div>
+      {% empty %}
+        <p>This module has no contents yet.</p>
+      {% endfor %}
+    </div>
+
+    <!-- Provide links to add new content types to the module -->
+    <h3>Add new content:</h3>
+    <ul class="content-types">
+      <li>
+        <a href="{% url "module_content_create" module.id "text" %}">Text</a>
+      </li>
+      <li>
+        <a href="{% url "module_content_create" module.id "image" %}">Image</a>
+      </li>
+      <li>
+        <a href="{% url "module_content_create" module.id "video" %}">Video</a>
+      </li>
+      <li>
+        <a href="{% url "module_content_create" module.id "file" %}">File</a>
+      </li>
+    </ul>
+  </div>
+{% endwith %}
+{% endblock %}
+
+{% block include_js %}
+  <!-- Include the sortable.js library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5sortable/0.13.3/html5sortable.min.js"></script>
+{% endblock %}
+
+{% block domready %}
+  <!-- Configure HTTP request options -->
+  var options = {
+      method: 'POST',
+      mode: 'same-origin'
+  }
+
+  // URL for the module order update
+  const moduleOrderUrl = '{% url "module_order" %}';
+
+  // Initialize the sortable functionality for the module list
+  sortable('#modules', {
+    forcePlaceholderSize: true,  // Placeholder size stays constant during drag
+    placeholderClass: 'placeholder'  // Apply placeholder class during drag
+  })[0].addEventListener('sortupdate', function(e) {
+    // Create an object to hold the updated module order
+    modulesOrder = {};
+    var modules = document.querySelectorAll('#modules li');
+    // Loop through each module and update its index in the order
+    modules.forEach(function (module, index) {
+      modulesOrder[module.dataset.id] = index;  // Update the module order
+      module.querySelector('.order').innerHTML = index + 1;  // Update the display order
+    });
+
+    // Add the updated module order to the HTTP request body
+    options['body'] = JSON.stringify(modulesOrder);
+
+    // Send the updated module order to the server using fetch
+    fetch(moduleOrderUrl, options)
+  });
+
+  // URL for the content order update
+  const contentOrderUrl = '{% url "content_order" %}';
+
+  // Initialize the sortable functionality for the module content list
+  sortable('#module-contents', {
+    forcePlaceholderSize: true,  // Ensure placeholder maintains size
+    placeholderClass: 'placeholder'  // Use the specified class for placeholder
+  })[0].addEventListener('sortupdate', function(e) {
+    // Create an object to store the updated content order
+    contentOrder = {};
+    var contents = document.querySelectorAll('#module-contents div');
+    // Loop through each content item and update its index in the order
+    contents.forEach(function (content, index) {
+      contentOrder[content.dataset.id] = index;  // Update the content order
+    });
+
+    // Add the updated content order to the HTTP request options
+    options['body'] = JSON.stringify(contentOrder);
+
+    // Send the updated content order to the server using fetch
+    fetch(contentOrderUrl, options)
+  });
+
+{% endblock %}

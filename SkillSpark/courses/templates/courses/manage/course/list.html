@@ -27,6 +27,18 @@
       <a href="{% url "course_delete" course.id %}">Delete</a>
       <!-- Link to the page for updating the modules of the specified course. -->
       <a href="{% url "course_module_update" course.id %}">Edit modules</a>
+      {% if course.modules.count > 0 %}
+        <!-- Check if the course has any modules. -->
+        <a href="{% url "module_content_list" course.modules.first.id %}">
+            <!--
+            Link to manage the contents of the first module in the course.
+            - course.modules.first.id: Gets the ID of the first module in the course.
+            - "module_content_list": URL name for the module content list view.
+            -->
+            Manage contents
+        </a>
+      {% endif %}
+
     </p>
   </div>
   {% empty %}
