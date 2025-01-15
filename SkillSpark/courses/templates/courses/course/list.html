@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}
+    <!-- Title block to set the page title. -->
+    {% if subject %}
+        <!-- If a subject is specified, display the subject's title followed by "courses" -->
+        {{ subject.title }} courses
+    {% else %}
+        <!-- If no subject is specified, display "All courses" -->
+        All courses
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <!-- Content block where the main page content is defined. -->
+    <h1>
+        {% if subject %}
+            <!-- If a subject is specified, display the subject's title followed by "courses" -->
+            {{ subject.title }} courses
+        {% else %}
+            <!-- If no subject is specified, display "All courses" -->
+            All courses
+        {% endif %}
+    </h1>
+
+    <div class="contents">
+        <h3>Subjects</h3>
+        <ul id="modules">
+            <!-- "All" link that shows all courses when no subject is selected -->
+            <li {% if not subject %}class="selected"{% endif %}>
+                <a href="{% url 'course_list' %}">All</a>
+            </li>
+
+            <!-- Loop through all subjects and display each subject with a count of its courses -->
+            {% for s in subjects %}
+                <li {% if subject == s %}class="selected"{% endif %}>
+                    <a href="{% url 'course_list_subject' s.slug %}">
+                        {{ s.title }}
+                        <br>
+                        <span>
+                            <!-- Display the number of courses in the subject, pluralized if necessary -->
+                            {{ s.total_courses }} course{{ s.total_courses|pluralize }}
+                        </span>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="module">
+        <!-- Loop through all courses and display each one with relevant details -->
+        {% for course in courses %}
+            {% with subject=course.subject %}
+                <h3>
+                    <a href="{% url 'course_detail' course.slug %}">
+                        <!-- Link to the detailed page of the course -->
+                        {{ course.title }}
+                    </a>
+                </h3>
+                <p>
+                    <!-- Link to the subject's page for easy navigation back to the subject -->
+                    <a href="{% url 'course_list_subject' subject.slug %}">{{ subject }}</a>.
+                    <!-- Display the number of modules in the course -->
+                    {{ course.total_modules }} modules.
+                    <!-- Display the course instructor's full name -->
+                    Instructor: {{ course.owner.get_full_name }}
+                </p>
+            {% endwith %}
+        {% endfor %}
+    </div>
+{% endblock %}

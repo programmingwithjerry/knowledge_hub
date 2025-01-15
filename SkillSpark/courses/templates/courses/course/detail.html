@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}
+    <!-- Title block to set the page title to the title of the course. -->
+    {{ object.title }}
+{% endblock %}
+
+{% block content %}
+    <!-- Content block where the main page content is defined. -->
+    {% with subject=object.subject %}
+        <!-- Use the 'with' tag to assign the course's subject to a variable for easy reference. -->
+        <h1>
+            <!-- Display the course title as the main heading -->
+            {{ object.title }}
+        </h1>
+
+        <div class="module">
+            <h2>Overview</h2>
+            <p>
+                <!-- Link to the course's subject page -->
+                <a href="{% url 'course_list_subject' subject.slug %}">
+                    {{ subject.title }}
+                </a>.
+                <!-- Display the number of modules in the course -->
+                {{ object.modules.count }} modules.
+                <!-- Display the full name of the course instructor -->
+                Instructor: {{ object.owner.get_full_name }}
+            </p>
+            <!-- Display the course's overview, converting line breaks into HTML -->
+            {{ object.overview|linebreaks }}
+        </div>
+    {% endwith %}
+{% endblock %}
