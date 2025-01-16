@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}
+    <!-- Set the title of the page to "My courses" -->
+    My courses
+{% endblock %}
+
+{% block content %}
+    <!-- Main content block that will display the courses the student is enrolled in -->
+    <h1>My courses</h1>
+
+    <div class="module">
+        <!-- Loop through each course in the 'object_list' to display the course information -->
+        {% for course in object_list %}
+            <div class="course-info">
+                <!-- Display the course title as a heading -->
+                <h3>{{ course.title }}</h3>
+                <p>
+                    <!-- Link to the course detail page to access the course contents -->
+                    <a href="{% url 'student_course_detail' course.id %}">
+                        Access contents
+                    </a>
+                </p>
+            </div>
+        {% empty %}
+            <!-- Display this message if the user is not enrolled in any courses -->
+            <p>
+                You are not enrolled in any courses yet.
+                <!-- Provide a link to browse and enroll in available courses -->
+                <a href="{% url 'course_list' %}">Browse courses</a> to enroll in a course.
+            </p>
+        {% endfor %}
+    </div>
+{% endblock %}
+

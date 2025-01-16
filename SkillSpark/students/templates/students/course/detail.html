@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}
+    <!-- Set the page title to the current object's title (most likely a course) -->
+    {{ object.title }}
+{% endblock %}
+
+{% block content %}
+    <!-- Main content block that displays the module details -->
+    <h1>
+        <!-- Display the title of the current module -->
+        {{ module.title }}
+    </h1>
+
+    <div class="contents">
+        <!-- Display a list of modules for the current course -->
+        <h3>Modules</h3>
+        <ul id="modules">
+            {% for m in object.modules.all %}
+                <!-- Loop through all modules of the current course -->
+                <li data-id="{{ m.id }}" {% if m == module %}class="selected"{% endif %}>
+                    <!-- Highlight the current module by adding the 'selected' class -->
+                    <a href="{% url 'student_course_detail_module' object.id m.id %}">
+                        <span>
+                            Module <span class="order">{{ m.order|add:1 }}</span>
+                        </span>
+                        <br>
+                        <!-- Display the title of the module -->
+                        {{ m.title }}
+                    </a>
+                </li>
+            {% empty %}
+                <!-- Display this if there are no modules in the course -->
+                <li>No modules yet.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="module">
+        <!-- Display the contents of the current module -->
+        {% for content in module.contents.all %}
+            <!-- Loop through all contents for the current module -->
+            {% with item=content.item %}
+                <!-- Use the 'with' statement to refer to the item related to the content -->
+                <h2>{{ item.title }}</h2>
+                <!-- Display the rendered content of the item -->
+                {{ item.render }}
+            {% endwith %}
+        {% endfor %}
+    </div>
+{% endblock %}
