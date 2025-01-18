@@ -1,13 +1,36 @@
 """
-This module defines a serializer for the `Subject` model, enabling 
+This module defines a serializer for the `Subject` model, enabling
 serialization and deserialization of Subject objects for API interactions.
 """
 
 from rest_framework import serializers
-from courses.models import Subject
+from courses.models import Course, Module, Subject
 from django.db.models import Count
 from rest_framework import serializers
 from courses.models import Subject
+
+class ModuleSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Module model.
+
+    This class provides a way to serialize and deserialize Module
+    model instances. It converts module data into JSON format for
+    API responses and validates input data
+    for module creation or updates within a course.
+
+    Fields:
+        - order: The order of the module in the course structure.
+        - title: The title of the module.
+        - description: A brief description of the module's content.
+
+    Attributes:
+        Meta (class): The metadata for the serializer, including the
+        model and fields to include.
+    """
+    class Meta:
+        model = Module
+        fields = ['order', 'title', 'description']
+
 
 class SubjectSerializer(serializers.ModelSerializer):
     """
@@ -50,4 +73,42 @@ class SubjectSerializer(serializers.ModelSerializer):
             'slug',
             'total_courses',
             'popular_courses'
+        ]
+
+
+class CourseSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Course model.
+
+    This class provides a way to serialize and deserialize Course
+    model instances. It converts model data into JSON format for API
+    responses and validates input data for course creation or updates.
+
+    Fields:
+        - id: The unique identifier for the course.
+        - subject: The subject of the course.
+        - title: The title of the course.
+        - slug: A unique slug for the course used in URLs.
+        - overview: A brief description or overview of the course content.
+        - created: The date and time when the course was created.
+        - owner: The user who created or owns the course.
+        - modules: A list of modules associated with the course.
+
+    Attributes:
+        Meta (class): The metadata for the serializer,
+        including the model and fields to include.
+    """
+    modules = ModuleSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Course
+        fields = [
+            'id',
+            'subject',
+            'title',
+            'slug',
+            'overview',
+            'created',
+            'owner',
+            'modules'
         ]

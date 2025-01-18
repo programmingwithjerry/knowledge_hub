@@ -1,21 +1,22 @@
-from django.urls import path
+from django.urls import include, path
+from rest_framework import routers
 from . import views
 
 # Define the application namespace for URL namespacing
 app_name = 'courses'
 
-# URL patterns for the 'courses' app
+# Create a router instance for automatically generating URL patterns.
+# Register the 'courses' endpoint with the CourseViewSet to handle
+# listing and retrieving Course data via API.
+router = routers.DefaultRouter()
+router.register('courses', views.CourseViewSet)
+# Register the 'subjects' endpoint with the SubjectViewSet to handle
+# listing and retrieving Subject data via API.
+router.register('subjects', views.SubjectViewSet)
+
+# Include the router-generated URL patterns in the application's URL configuration.
+# This automatically maps the registered 'subjects' and 'courses' endpoints
+# to the appropriate views, enabling API access to both subjects and courses.
 urlpatterns = [
-    # URL pattern for listing all subjects
-    path(
-        'subjects/',  # Endpoint URL
-        views.SubjectListView.as_view(),  # View class to handle the request
-        name='subject_list'  # Name of the URL pattern for reverse lookups
-    ),
-    # URL pattern for retrieving details of a specific subject by its primary key
-    path(
-        'subjects/<pk>/',  # Endpoint URL with dynamic parameter <pk>
-        views.SubjectDetailView.as_view(),  # View class to handle the request
-        name='subject_detail'  # Name of the URL pattern for reverse lookups
-    ),
+    path('', include(router.urls)),
 ]

@@ -6,35 +6,44 @@ streamlined implementation.
 
 from django.db.models import Count
 from rest_framework import generics
-from courses.models import Subject
+from rest_framework import viewsets
+from courses.models import Course, Subject
 from courses.api.pagination import StandardPagination
-from courses.api.serializers import SubjectSerializer
+from courses.api.serializers import CourseSerializer, SubjectSerializer
 
-class SubjectListView(generics.ListAPIView):
+class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    API view to list all Subject instances.
+    A read-only viewset for listing and retrieving Course instances.
+
+    This viewset provides read-only access to Course model data through
+    the list and retrieve actions. It uses pagination for the
+    listing of courses
+    and prefetches related modules to optimize query performance.
 
     Attributes:
-        queryset: Specifies all Subject objects to be included in the list.
-        serializer_class: Defines the serializer to be used for formatting
-        the output.
+        queryset (QuerySet): A queryset that fetches courses along
+                            with related modules
+                              using prefetch_related to reduce database queries.
+        serializer_class (class): The serializer class to convert Course model data
+                                     into JSON format for API responses.
+        pagination_class (class): The pagination class to control how
+                    the courses are paginated in the API response.
     """
-    # Query all Subject objects from the database
-    queryset = Subject.objects.annotate(total_courses=Count('courses'))
-    # Use the SubjectSerializer to format the output data
-    serializer_class = SubjectSerializer
+    queryset = Course.objects.prefetch_related('modules')
+    serializer_class = CourseSerializer
     pagination_class = StandardPagination
 
-class SubjectDetailView(generics.RetrieveAPIView):
+
+class SubjectViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    API view to retrieve a single Subject instance by its primary key.
+    A read-only viewset for listing and retrieving Subject instances, 
+    with the total number of associated courses.
 
     Attributes:
-        queryset: Specifies all Subject objects for lookup.
-        serializer_class: Defines the serializer to be used
-        for formatting the output.
+        queryset (QuerySet): Subjects annotated with the total number of related courses.
+        serializer_class (class): Serializer to convert Subject data into JSON format.
+        pagination_class (class): Pagination class to control subject list results.
     """
-    # Query all Subject objects to find the one matching the primary key
     queryset = Subject.objects.annotate(total_courses=Count('courses'))
-    # Use the SubjectSerializer to format the retrieved object
     serializer_class = SubjectSerializer
+    pagination_class = StandardPagination
