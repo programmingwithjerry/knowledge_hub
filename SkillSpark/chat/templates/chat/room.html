@@ -19,9 +19,71 @@ Chat room for "{{ course.title }}"
 {% endblock %}
 
 {% block include_js %}
-<!-- Block for including additional JavaScript files if needed (optional) -->
+<!-- Embed the course ID in the HTML as a JSON object, using the `json_script` filter to safely output it -->
+{{ course.id|json_script:"course-id" }}
 {% endblock %}
 
 {% block domready %}
-<!-- Block for adding JavaScript code to be executed when the DOM is fully loaded (optional) -->
+<!-- JavaScript to execute when the DOM is fully loaded -->
+
+<!-- Parse the course ID from the embedded JSON object (from the `course-id` element) -->
+const courseId = JSON.parse(
+    document.getElementById('course-id').textContent
+);
+
+<!-- Construct the WebSocket URL dynamically using the course ID -->
+const url = 'ws://' + window.location.host +
+    '/ws/chat/room/' + courseId + '/';
+
+<!-- Create a new WebSocket connection to the constructed URL -->
+const chatSocket = new WebSocket(url);
+
+<!-- Handle the incoming message from the WebSocket -->
+chatSocket.onmessage = function(event) {
+    // Parse the incoming message data (JSON format)
+    const data = JSON.parse(event.data);
+    // Get the chat element in the DOM where messages will be displayed
+    const chat = document.getElementById('chat');
+    // Append the new message to the chat container
+    chat.innerHTML += '<div class="message">' +
+        data.message + '</div>';
+
+    // Scroll to the bottom of the chat container to show the latest message
+    chat.scrollTop = chat.scrollHeight;
+};
+
+<!-- Handle the WebSocket closing unexpectedly -->
+chatSocket.onclose = function(event) {
+    console.error('Chat socket closed unexpectedly');
+};
+
+<!-- Get the input field and submit button elements for sending messages -->
+const input = document.getElementById('chat-message-input');
+const submitButton = document.getElementById('chat-message-submit');
+
+<!-- Add an event listener to handle the message sending when the submit button is clicked -->
+submitButton.addEventListener('click', function(event) {
+    const message = input.value;
+    // If the input is not empty, send the message via WebSocket
+    if(message) {
+        // Send the message in JSON format over the WebSocket connection
+        chatSocket.send(JSON.stringify({'message': message}));
+        // Clear the input field and focus back on it
+        input.value = '';
+        input.focus();
+    }
+});
+
+<!-- Add an event listener to handle sending the message when 'Enter' is pressed -->
+input.addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        // Prevent the default action (e.g., form submission)
+        event.preventDefault();
+        // Trigger the click event of the submit button
+        submitButton.click();
+    }
+});
+
+<!-- Focus on the input field when the page is ready -->
+input.focus();
 {% endblock %}
