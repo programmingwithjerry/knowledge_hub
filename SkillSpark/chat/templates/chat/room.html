@@ -21,6 +21,7 @@ Chat room for "{{ course.title }}"
 {% block include_js %}
 <!-- Embed the course ID in the HTML as a JSON object, using the `json_script` filter to safely output it -->
 {{ course.id|json_script:"course-id" }}
+{{ request.user.username|json_script:"request-user" }}
 {% endblock %}
 
 {% block domready %}
@@ -29,6 +30,9 @@ Chat room for "{{ course.title }}"
 <!-- Parse the course ID from the embedded JSON object (from the `course-id` element) -->
 const courseId = JSON.parse(
     document.getElementById('course-id').textContent
+);
+const requestUser = JSON.parse(
+    document.getElementById('request-user').textContent
 );
 
 <!-- Construct the WebSocket URL dynamically using the course ID -->
@@ -44,9 +48,26 @@ chatSocket.onmessage = function(event) {
     const data = JSON.parse(event.data);
     // Get the chat element in the DOM where messages will be displayed
     const chat = document.getElementById('chat');
-    // Append the new message to the chat container
-    chat.innerHTML += '<div class="message">' +
-        data.message + '</div>';
+    const dateOptions = {hour: 'numeric', minute: 'numeric', hour12: true};
+    const datetime = new Date(data.datetime).toLocaleString('en', dateOptions);
+    const isMe = data.user === requestUser;
+    const source = isMe ? 'me' : 'other';
+    const name = isMe ? 'Me' : data.user;
+    // Append a new message to the 'chat' element
+chat.innerHTML +=
+              // Create a new <div> element with the class 'message' and the dynamic 'source' class
+              '<div class="message ' + source + '">' +
+
+              // Add the sender's name in a <strong> tag to make it bold
+              '<strong>' + name + '</strong> ' +
+
+              // Add the datetime of the message in a <span> element with the class 'date'
+              '<span class="date">' + datetime + '</span><br>' +
+
+              // Add the actual message content
+              data.message +
+              '</div>';  // Close the <div> element
+
 
     // Scroll to the bottom of the chat container to show the latest message
     chat.scrollTop = chat.scrollHeight;
