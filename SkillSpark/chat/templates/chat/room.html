@@ -7,21 +7,22 @@ Chat room for "{{ course.title }}"
 {% endblock %}
 
 {% block content %}
-<!-- Main content block for the chat room layout -->
-<div id="chat">
-    <!-- This div will contain the chat messages dynamically loaded via JavaScript -->
-</div>
-<div id="chat-input">
-    <!-- Input area for users to type and submit chat messages -->
-    <input id="chat-message-input" type="text"> <!-- Text input for entering messages -->
-    <input id="chat-message-submit" type="submit" value="Send"> <!-- Submit button to send the message -->
-</div>
-{% endblock %}
-
-{% block include_js %}
-<!-- Embed the course ID in the HTML as a JSON object, using the `json_script` filter to safely output it -->
-{{ course.id|json_script:"course-id" }}
-{{ request.user.username|json_script:"request-user" }}
+  <div id="chat">
+    <!-- Loop through the latest messages and display them -->
+    {% for message in latest_messages %}
+      <div class="message {% if message.user == request.user %}me{% else %}other{% endif %}">
+        <!-- Display the username of the message sender -->
+        <strong>{{ message.user.username }}</strong>
+        <!-- Display the message timestamp formatted in "Year.Month.Day Hour:Minute AM/PM" -->
+        <span class="date">
+          {{ message.sent_on|date:"Y.m.d H:i A" }}
+        </span>
+        <br>
+        <!-- Display the content of the message -->
+        {{ message.content }}
+      </div>
+    {% endfor %}
+  </div>
 {% endblock %}
 
 {% block domready %}

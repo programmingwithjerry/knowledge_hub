@@ -3,6 +3,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 from django.utils import timezone
+from chat.models import Message
 
 class ChatConsumer(AsyncWebsocketConsumer):
     """
@@ -43,6 +44,25 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.channel_name  # The unique channel name for the WebSocket connection
         )
 
+
+    async def persist_message(self, message):
+        """
+        Asynchronously persists a message to the database and sends it to the WebSocket.
+
+        This method creates a new Message record in the database associated with the current user 
+        and course, and sends the message to the WebSocket for real-time communication.
+
+        Args:
+            message (str): The content of the message to be sent and saved.
+        """
+        # Send message to WebSocket and save to the database asynchronously
+        await Message.objects.acreate(
+            user=self.user,        # The user who is sending the message
+            course_id=self.id,     # The course with which the message is associated
+            content=message        # The content of the message
+        )
+
+
     async def receive(self, text_data):
         """
         Receives a message from the WebSocket.
@@ -65,6 +85,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'datetime': now.isoformat(),
             }
         )
+        # Call the persist_message method asynchronously to save the message to the database
+        # and send it to the WebSocket for real-time communication.
+        await self.persist_message(message)
 
     async def chat_message(self, event):
         """
