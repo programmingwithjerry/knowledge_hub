@@ -16,6 +16,8 @@ from courses.api.serializers import CourseSerializer, SubjectSerializer
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
+from courses.api.permissions import IsEnrolled
+from courses.api.serializers import CourseWithContentsSerializer
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -55,6 +57,33 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         # Return a response indicating that the user has successfully enrolled
         return Response({'enrolled': True})
 
+
+        # Define a custom action on the viewset for retrieving course contents
+        @action(
+            detail=True,  # Indicates that this action is related to a specific course object (not a list)
+            methods=['get'],  # This action responds to GET requests
+            serializer_class=CourseWithContentsSerializer,  # Use the `CourseWithContentsSerializer` for the response data
+            authentication_classes=[BasicAuthentication],  # Use Basic Authentication for this action
+            permission_classes=[IsAuthenticated, IsEnrolled]  # Only allow authenticated and enrolled users to access this action
+        )
+        def contents(self, request, *args, **kwargs):
+            """
+            Retrieve the details of a course along with its related modules
+            and contents. This action returns the course data serialized with
+            the `CourseWithContentsSerializer`, which includes nested modules
+            and content information for the specified course.
+            Args:
+                request: The HTTP request.
+                *args: Additional arguments.
+                **kwargs: Keyword arguments, including the course identifier.
+            Return:
+                Response: The serialized course data including modules and contents.
+            """
+            # Call the `retrieve` method to get the detailed representation of the course
+            # The `retrieve` method will use the `CourseWithContentsSerializer` for serialization
+            return self.retrieve(request, *args, **kwargs)
+
+
 class SubjectViewSet(viewsets.ReadOnlyModelViewSet):
     """
     A read-only viewset for listing and retrieving Subject instances,
@@ -68,3 +97,4 @@ class SubjectViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Subject.objects.annotate(total_courses=Count('courses'))
     serializer_class = SubjectSerializer
     pagination_class = StandardPagination
+

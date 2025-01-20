@@ -1,5 +1,6 @@
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.template.loader import render_to_string
 from django.contrib.auth.models import User
 from .fields import OrderField
 from django.db import models
@@ -55,6 +56,11 @@ class Course(models.Model):
     slug = models.SlugField(max_length=200, unique=True)
     overview = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
+    students = models.ManyToManyField(
+    User,  # The related model is the User model (representing students in this case)
+    related_name='courses_joined',  # The reverse relationship name, allowing access to courses joined by a user
+    blank=True  # Allows the field to be left empty (a course may have no students enrolled initially)
+)
 
     class Meta:
         # Order courses by creation date in descending order.
@@ -155,6 +161,19 @@ class ItemBase(models.Model):
     title = models.CharField(max_length=250)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+
+    def render(self):
+        """
+        Renders the content for the current object using the appropriate template.
+        The template is dynamically determined based on the model's name.
+        """
+        # Use 'render_to_string' to render the template corresponding to the model's name
+        # The template path is constructed dynamically as 'courses/content/<model_name>.html'
+        return render_to_string(
+            f'courses/content/{self._meta.model_name}.html',  # Template path based on model name
+            {'item': self}  # Pass the current object ('self') as the context variable 'item'
+        )
+
 
     class Meta:
         """

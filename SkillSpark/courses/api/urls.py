@@ -19,5 +19,4 @@ router.register('subjects', views.SubjectViewSet)
 # to the appropriate views, enabling API access to both subjects and courses.
 urlpatterns = [
     path('', include(router.urls)),
-
 ]

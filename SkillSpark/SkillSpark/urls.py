@@ -52,7 +52,13 @@ urlpatterns = [
     # Include the debug toolbar URLs in the project URL configuration for debugging purposes
     # The `__debug__` URL path is used to trigger the Django Debug Toolbar interface.
     path('__debug__/', include('debug_toolbar.urls')),
-
+    # Include the URL patterns from the 'courses.api.urls' module under the 'api/' path
+    # The 'namespace' argument ensures proper namespacing for reverse lookups
+    path('api/', include('courses.api.urls', namespace='api')),
+    path(
+    'chat/',  # Base URL prefix for all chat-related routes
+    include('chat.urls', namespace='chat')  # Includes the URL patterns from the 'chat' app, using the 'chat' namespace for URL namespacing
+),
 ]
 
 """If the application is in debug mode, serve media files through

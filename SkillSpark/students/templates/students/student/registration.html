@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}
+    <!-- Title block to set the page title to "Sign up". -->
+    Sign up
+{% endblock %}
+
+{% block content %}
+    <!-- Content block where the main page content is defined. -->
+    <h1>
+        <!-- Main heading displaying "Sign up" -->
+        Sign up
+    </h1>
+
+    <div class="module">
+        <p>Enter your details to create an account:</p>
+        <!-- Form to create an account. -->
+        <form method="post">
+            <!-- Render the form fields as paragraph elements -->
+            {{ form.as_p }}
+
+            <!-- Include CSRF token for security -->
+            {% csrf_token %}
+
+            <p>
+                <!-- Submit button to create the account -->
+                <input type="submit" value="Create my account">
+            </p>
+        </form>
+    </div>
+{% endblock %}

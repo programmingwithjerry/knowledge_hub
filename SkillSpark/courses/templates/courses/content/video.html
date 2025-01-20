@@ -1,0 +1,12 @@
+<!-- 
+    The '{% load embed_video_tags %}' tag loads custom template tags related to embedding videos. 
+    This makes the 'video' tag available for use in the template.
+-->
+{% load embed_video_tags %}
+
+<!-- 
+    The '{% video item.url "small" %}' tag embeds a video from the URL stored in 'item.url'. 
+    The 'small' argument likely specifies the video size or resolution.
+-->
+{% video item.url "small" %}
+

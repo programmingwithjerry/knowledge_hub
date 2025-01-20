@@ -1,3 +1,4 @@
+from braces.views import CsrfExemptMixin, JsonRequestResponseMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic.base import TemplateResponseMixin, View
 from .forms import ModuleFormSet
@@ -7,7 +8,12 @@ from .forms import ModuleFormSet
 from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.views.generic.list import ListView
+from students.forms import CourseEnrollForm
 from .models import Course
+from django.core.cache import cache
+from django.db.models import Count
+from .models import Subject
+from django.views.generic.detail import DetailView
 from django.apps import apps
 from django.forms.models import modelform_factory
 from .models import Module, Content
@@ -295,3 +301,204 @@ class ContentDeleteView(View):
 
         # Redirect the user to the module content list page.
         return redirect('module_content_list', module.id)
+
+
+class ModuleContentListView(TemplateResponseMixin, View):
+    """
+    A view to display a list of content for a specific course module.
+
+    This view retrieves the module associated with the given `module_id` and
+    renders a list of content items within that module. It ensures that only
+    the course owner (user) can view the content of their own course module.
+
+    Attributes:
+        template_name (str): The template used to render the content list.
+    Methods:
+        get(request, module_id):
+            Handles the GET request to retrieve the module and render its content list.
+    """
+    # Template for displaying the content list
+    template_name = 'courses/manage/module/content_list.html'
+
+    def get(self, request, module_id):
+        """
+        Retrieves and displays the content list for the specified module.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            module_id (int): The ID of the module for which content is being listed.
+
+        Return:
+            HttpResponse: A response rendering the module content list page.
+        """
+        # Retrieve the module object, ensuring the user is the owner of the course.
+        module = get_object_or_404(
+            Module, id=module_id, course__owner=request.user
+        )
+        # Render the content list page with the module data.
+        return self.render_to_response({'module': module})
+
+
+class ModuleOrderView(CsrfExemptMixin, JsonRequestResponseMixin, View):
+    """
+    Handles the reordering of modules via a JSON request.
+    This view allows users to update the order of modules in a course.
+    It processes a JSON payload containing module IDs and their new order,
+    ensuring that only modules owned by the requesting user are updat
+    Methods:
+        post(request):
+            Processes the POST request to reorder modules.
+    """
+
+    def post(self, request):
+        """
+        Updates the order of modules based on the JSON payload.
+        Args:
+            request (HttpRequest): The HTTP request containing the
+            JSON payload with module IDs and their new order.
+        Return:
+            JsonResponse: A JSON response indicating the status of the operation.
+        """
+        # Iterate over the JSON payload to extract module IDs and their corresponding order.
+        for id, order in self.request_json.items():
+            # Update the order of the module if it belongs to the requesting user.
+            Module.objects.filter(
+                id=id, course__owner=request.user
+            ).update(order=order)
+        # Return a JSON response confirming the successful update.
+        return self.render_json_response({'saved': 'OK'})
+
+
+class ContentOrderView(CsrfExemptMixin, JsonRequestResponseMixin, View):
+    """
+    Handles the reordering of content items within a module via a JSON request.
+
+    This view processes a JSON payload containing content item IDs and their
+    new order. It ensures that only content items owned by the requesting
+    user and associated with their course are updated.
+
+    Methods:
+        post(request):
+            Processes the POST request to reorder content items.
+    """
+
+    def post(self, request):
+        """
+        Updates the order of content items based on the JSON payload.
+
+        Args:
+            request (HttpRequest): The HTTP request containing the JSON
+            payload with content item IDs and their new order.
+
+        Return:
+            JsonResponse: A JSON response indicating the status of the operation.
+        """
+        # Iterate over the JSON payload to extract content item IDs and their corresponding order.
+        for id, order in self.request_json.items():
+            # Update the order of the content item if it belongs to the requesting user and their course.
+            Content.objects.filter(
+                id=id, module__course__owner=request.user
+            ).update(order=order)
+
+        # Return a JSON response confirming the successful update of content item order.
+        return self.render_json_response({'saved': 'OK'})
+
+
+class CourseListView(TemplateResponseMixin, View):
+    """
+    A class-based view that handles the display of a list of courses.
+    It supports caching of subjects and courses to improve performance.
+    """
+    model = Course
+    template_name = 'courses/course/list.html'
+
+    def get(self, request, subject=None):
+        """
+        Handles GET requests to display a list of courses, either filtered by a specific subject
+        or showing all courses. Caches subjects and courses to avoid repeated database queries.
+        Arguments:
+        - request: The HTTP request object.
+        - subject: An optional subject slug used to filter courses by subject.
+        Returns:
+        - A rendered template with the context containing subjects, the selected subject, and courses.
+        """
+        # Attempt to fetch all subjects from the cache
+        subjects = cache.get('all_subjects')
+
+        # If subjects are not found in the cache (cache miss), query the database
+        if not subjects:
+            # Annotate subjects with the count of related courses
+            subjects = Subject.objects.annotate(
+                total_courses=Count('courses')
+            )
+            # Store the subjects in the cache for future requests
+            cache.set('all_subjects', subjects)
+
+        # Query all courses, annotate them with the count of related modules
+        all_courses = Course.objects.annotate(
+            total_modules=Count('modules')
+        )
+
+        # If a subject is provided in the URL, filter courses by that subject
+        if subject:
+            # Retrieve the subject object from the database, or return a 404 error if not found
+            subject = get_object_or_404(Subject, slug=subject)
+
+            # Cache key for courses related to a specific subject
+            key = f'subject_{subject.id}_courses'
+            # Attempt to fetch the courses for the specific subject from the cache
+            courses = cache.get(key)
+
+            # If courses for this subject are not in the cache (cache miss), query the database
+            if not courses:
+                # Filter courses by the given subject
+                courses = all_courses.filter(subject=subject)
+                # Store the filtered courses in the cache for future requests
+                cache.set(key, courses)
+        else:
+            # If no specific subject is provided, fetch all courses
+            courses = cache.get('all_courses')
+
+            # If courses are not found in the cache (cache miss), query the database
+            if not courses:
+                # Retrieve all courses
+                courses = all_courses
+                # Store the courses in the cache for future requests
+                cache.set('all_courses', courses)
+
+        # Render the response with the context including subjects, selected subject, and courses
+        return self.render_to_response(
+            {
+                'subjects': subjects,  # List of all subjects
+                'subject': subject,    # The selected subject, if any
+                'courses': courses     # List of courses (either all or filtered by subject)
+            }
+        )
+
+
+class CourseDetailView(DetailView):
+    """
+    View to display the detailed information of a specific course.
+    This view fetches a single course instance based on the primary key
+    and renders its details in the specified template.
+    """
+    model = Course
+    template_name = 'courses/course/detail.html'
+
+
+def get_context_data(self, **kwargs):
+    """
+    Method to get the context data for rendering the template.
+    It adds the enrollment form pre-populated with the selected course.
+    """
+    # Call the parent class's get_context_data method to get the existing context
+    context = super().get_context_data(**kwargs)
+
+    # Add the enrollment form to the context, pre-populated with the current course
+    context['enroll_form'] = CourseEnrollForm(
+        # Set the initial value of the 'course'field to the current course object
+        initial={'course': self.object}
+    )
+
+    # Return the updated context to be used in the template
+    return context
